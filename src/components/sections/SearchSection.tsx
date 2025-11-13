@@ -1,5 +1,5 @@
 import styled from 'styled-components';
-import { Search, Sparkles } from 'lucide-react';
+import { Search } from 'lucide-react';
 import { useState } from 'react';
 import { Button } from '@/components/common';
 
