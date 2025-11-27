@@ -1,6 +1,6 @@
 import styled from 'styled-components';
-import { Calendar, User, FileText, Award } from 'lucide-react';
-import { Patent } from '@/types';
+import { Calendar, User, FileText, CheckCircle, XCircle } from 'lucide-react';
+import { PatentItem } from '@/types';
 import { Card, Badge } from '@/components/common';
 
 const StyledPatentCard = styled(Card)`
@@ -58,50 +58,83 @@ const InfoItem = styled.div`
   }
 `;
 
-const Abstract = styled.p`
+const Summary = styled.p`
   font-size: ${({ theme }) => theme.fontSize.sm};
   color: ${({ theme }) => theme.colors.text};
   line-height: 1.6;
   margin: 0;
+  white-space: pre-line;
 `;
 
-const PatentNumbers = styled.div`
+const PatentId = styled.div`
   display: flex;
-  flex-wrap: wrap;
+  align-items: center;
   gap: ${({ theme }) => theme.spacing.sm};
   font-size: ${({ theme }) => theme.fontSize.xs};
   color: ${({ theme }) => theme.colors.textLight};
-`;
-
-const PatentNumber = styled.span`
   background: ${({ theme }) => theme.colors.backgroundLight};
   padding: ${({ theme }) => `${theme.spacing.xs} ${theme.spacing.sm}`};
   border-radius: ${({ theme }) => theme.borderRadius.sm};
+  width: fit-content;
+`;
+
+const StatusBadge = styled.div<{ status: string }>`
+  display: flex;
+  align-items: center;
+  gap: ${({ theme }) => theme.spacing.xs};
+  padding: ${({ theme }) => `${theme.spacing.xs} ${theme.spacing.sm}`};
+  border-radius: ${({ theme }) => theme.borderRadius.sm};
+  font-size: ${({ theme }) => theme.fontSize.xs};
+  font-weight: ${({ theme }) => theme.fontWeight.medium};
+  
+  ${({ status, theme }) => status === 'success' 
+    ? `
+      background: #e6f7ed;
+      color: #00875a;
+    `
+    : `
+      background: #ffebe6;
+      color: #de350b;
+    `
+  }
+  
+  svg {
+    width: 14px;
+    height: 14px;
+  }
 `;
 
 interface PatentCardProps {
-  patent: Patent;
+  patent: PatentItem;
   onClick?: () => void;
 }
 
 export const PatentCard = ({ patent, onClick }: PatentCardProps) => {
-  const getSimilarityVariant = (score?: number) => {
-    if (!score) return 'primary';
-    if (score >= 90) return 'success';
-    if (score >= 80) return 'info';
-    if (score >= 70) return 'warning';
-    return 'danger';
+  // relevanceScore는 "0.35" 형식의 문자열이므로 숫자로 변환 후 100을 곱해서 퍼센트로 표시
+  const relevancePercent = Math.round(parseFloat(patent.relevanceScore) * 100);
+  
+  const getSimilarityVariant = (score: number) => {
+    if (score >= 80) return 'danger';  // 높은 유사도는 위험(red)
+    if (score >= 60) return 'warning';
+    if (score >= 40) return 'info';
+    return 'success';  // 낮은 유사도는 안전(green)
+  };
+
+  // 날짜 포맷팅 (YYYYMMDD -> YYYY.MM.DD)
+  const formatDate = (date: string) => {
+    if (date.length === 8) {
+      return `${date.slice(0, 4)}.${date.slice(4, 6)}.${date.slice(6, 8)}`;
+    }
+    return date;
   };
 
   return (
     <StyledPatentCard hoverable onClick={onClick}>
       <CardHeader>
         <Title>{patent.title}</Title>
-        {patent.similarityScore && (
-          <SimilarityBadge variant={getSimilarityVariant(patent.similarityScore)}>
-            유사도: {patent.similarityScore}%
-          </SimilarityBadge>
-        )}
+        <SimilarityBadge variant={getSimilarityVariant(relevancePercent)}>
+          유사도: {relevancePercent}%
+        </SimilarityBadge>
       </CardHeader>
       
       <InfoGrid>
@@ -111,24 +144,32 @@ export const PatentCard = ({ patent, onClick }: PatentCardProps) => {
         </InfoItem>
         <InfoItem>
           <Calendar />
-          <span>출원일: {patent.applicationDate}</span>
+          <span>출원일: {formatDate(patent.applicationDate)}</span>
         </InfoItem>
         <InfoItem>
           <FileText />
-          <span>{patent.ipcCode}</span>
+          <span>출원번호: {patent.patentId}</span>
         </InfoItem>
-        <InfoItem>
-          <Award />
-          <span>{patent.inventor}</span>
-        </InfoItem>
+        <StatusBadge status={patent.matchstatus}>
+          {patent.matchstatus === 'success' ? (
+            <>
+              <CheckCircle />
+              <span>매칭 성공</span>
+            </>
+          ) : (
+            <>
+              <XCircle />
+              <span>매칭 실패</span>
+            </>
+          )}
+        </StatusBadge>
       </InfoGrid>
       
-      <Abstract>{patent.abstract}</Abstract>
+      <Summary>{patent.summary}</Summary>
       
-      <PatentNumbers>
-        <PatentNumber>출원번호: {patent.applicationNumber}</PatentNumber>
-        <PatentNumber>공개번호: {patent.publicationNumber}</PatentNumber>
-      </PatentNumbers>
+      <PatentId>
+        특허 ID: {patent.patentId}
+      </PatentId>
     </StyledPatentCard>
   );
 };

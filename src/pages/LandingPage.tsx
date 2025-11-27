@@ -8,8 +8,8 @@ import {
   UseCasesSection 
 } from '@/components/sections';
 import { SearchResults } from '@/components/search';
-import { Patent } from '@/types';
-import { searchPatents } from '@/data/mockData';
+import { PatentItem } from '@/types';
+import { analyzeIdea } from '@/services/api';
 
 const PageContainer = styled.div`
   width: 100%;
@@ -31,14 +31,18 @@ const ResultsContent = styled.div`
 `;
 
 export const LandingPage = () => {
-  const [results, setResults] = useState<Patent[]>([]);
+  const [results, setResults] = useState<PatentItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [searchTime, setSearchTime] = useState<number | undefined>(undefined);
   const [hasSearched, setHasSearched] = useState(false);
+  const [chatResponse, setChatResponse] = useState<string>('');
+  const [apiStatus, setApiStatus] = useState<'success' | 'failed' | null>(null);
+  const [error, setError] = useState<string>('');
 
   const handleSearch = async (query: string) => {
     setIsLoading(true);
     setHasSearched(true);
+    setError('');
     const startTime = performance.now();
 
     // 검색 섹션으로 스크롤
@@ -49,15 +53,24 @@ export const LandingPage = () => {
       }
     }, 100);
 
-    // 실제 검색 시뮬레이션 (800ms 딜레이)
-    setTimeout(() => {
-      const searchResults = searchPatents(query);
+    try {
+      // 실제 API 호출
+      const response = await analyzeIdea(query);
       const endTime = performance.now();
       
-      setResults(searchResults);
+      setApiStatus(response.status);
+      setChatResponse(response.chatResponse);
+      setResults(response.patentList || []);
       setSearchTime((endTime - startTime) / 1000);
+    } catch (err) {
+      console.error('검색 실패:', err);
+      setError('검색 중 오류가 발생했습니다. 다시 시도해주세요.');
+      setApiStatus('failed');
+      setChatResponse('');
+      setResults([]);
+    } finally {
       setIsLoading(false);
-    }, 800);
+    }
   };
 
   const handleStartSearch = () => {
@@ -67,9 +80,9 @@ export const LandingPage = () => {
     }
   };
 
-  const handlePatentClick = (patent: Patent) => {
+  const handlePatentClick = (patent: PatentItem) => {
     console.log('특허 상세 보기:', patent);
-    alert(`${patent.title}\n\n${patent.abstract}`);
+    alert(`${patent.title}\n\n${patent.summary}`);
   };
 
   return (
@@ -84,6 +97,9 @@ export const LandingPage = () => {
               results={results}
               isLoading={isLoading}
               searchTime={searchTime}
+              chatResponse={chatResponse}
+              apiStatus={apiStatus}
+              error={error}
               onPatentClick={handlePatentClick}
             />
           </ResultsContent>
