@@ -1,60 +1,108 @@
 import styled from 'styled-components';
-import { Calendar, User, FileText, CheckCircle, XCircle } from 'lucide-react';
+import { Calendar, User, ExternalLink } from 'lucide-react';
 import { PatentItem } from '@/types';
-import { Card, Badge } from '@/components/common';
+import { Card } from '@/components/common';
+
+/* 배지 공통 스타일 */
+const BADGE_BORDER_RADIUS = '9999px'; /* 완전히 둥근 pill 형태 */
+const BADGE_PADDING = '6px 14px';
+const BADGE_FONT_SIZE = '16px';
+const BADGE_FONT_WEIGHT = '600';
+
+/* 출원번호 배지 */
+const PatentIdBadge = styled.span`
+  display: inline-flex;
+  align-items: center;
+  padding: ${BADGE_PADDING};
+  border-radius: ${BADGE_BORDER_RADIUS};
+  font-size: ${BADGE_FONT_SIZE};
+  font-weight: ${BADGE_FONT_WEIGHT};
+  line-height: 1;
+  background: #ffffff;
+  color: #000000;
+  border: 1px solid ${({ theme }) => theme.colors.borderLight};
+`;
+
+/* 유사도 배지 - 출원번호 배지와 동일한 크기 */
+const SimilarityBadge = styled.span<{ variant: string }>`
+  display: inline-flex;
+  align-items: center;
+  padding: ${BADGE_PADDING};
+  border-radius: ${BADGE_BORDER_RADIUS};
+  font-size: ${BADGE_FONT_SIZE};
+  font-weight: ${BADGE_FONT_WEIGHT};
+  line-height: 1;
+  
+  ${({ variant, theme }) => {
+    switch (variant) {
+      case 'success':
+        return `
+          background: ${theme.colors.success}20;
+          color: ${theme.colors.success};
+        `;
+      case 'warning':
+        return `
+          background: ${theme.colors.warning}20;
+          color: ${theme.colors.warning};
+        `;
+      case 'danger':
+        return `
+          background: ${theme.colors.danger}20;
+          color: ${theme.colors.danger};
+        `;
+      case 'info':
+        return `
+          background: ${theme.colors.info}20;
+          color: ${theme.colors.info};
+        `;
+      default:
+        return `
+          background: ${theme.colors.primary}20;
+          color: ${theme.colors.primary};
+        `;
+    }
+  }}
+`;
 
 const StyledPatentCard = styled(Card)`
   display: flex;
   flex-direction: column;
-  gap: ${({ theme }) => theme.spacing.md};
+  gap: ${({ theme }) => theme.spacing.lg};
 `;
 
-const CardHeader = styled.div`
+const TopHeader = styled.div`
   display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: ${({ theme }) => theme.spacing.md};
-  
-  @media (max-width: ${({ theme }) => theme.breakpoints.tablet}) {
-    flex-direction: column;
-  }
+  align-items: center;
+  gap: ${({ theme }) => theme.spacing.sm};
+  flex-wrap: wrap;
 `;
 
 const Title = styled.h3`
   font-size: ${({ theme }) => theme.fontSize.lg};
   font-weight: ${({ theme }) => theme.fontWeight.bold};
   color: ${({ theme }) => theme.colors.text};
-  margin: 0;
+  margin: ${({ theme }) => theme.spacing.sm} 0 0 0;
   line-height: 1.4;
 `;
 
-const SimilarityBadge = styled(Badge)`
-  font-size: ${({ theme }) => theme.fontSize.md};
-  padding: ${({ theme }) => `${theme.spacing.sm} ${theme.spacing.md}`};
-`;
-
-const InfoGrid = styled.div`
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+const InfoRow = styled.div`
+  display: flex;
+  align-items: center;
   gap: ${({ theme }) => theme.spacing.md};
-  
-  @media (max-width: ${({ theme }) => theme.breakpoints.mobile}) {
-    grid-template-columns: 1fr;
-    gap: ${({ theme }) => theme.spacing.sm};
-  }
+  flex-wrap: wrap;
 `;
 
 const InfoItem = styled.div`
   display: flex;
   align-items: center;
-  gap: ${({ theme }) => theme.spacing.sm};
+  gap: ${({ theme }) => theme.spacing.xs};
   font-size: ${({ theme }) => theme.fontSize.sm};
   color: ${({ theme }) => theme.colors.textLight};
-  
+
   svg {
     width: 16px;
     height: 16px;
-    flex-shrink: 0;
+    color: ${({ theme }) => theme.colors.textLight};
   }
 `;
 
@@ -66,111 +114,127 @@ const Summary = styled.p`
   white-space: pre-line;
 `;
 
-const PatentId = styled.div`
+/* ──────────────────────────────────────────── */
+/* Footer 영역 */
+/* ──────────────────────────────────────────── */
+
+const CardFooter = styled.div`
+  margin-top: ${({ theme }) => theme.spacing.lg};
+  padding-top: ${({ theme }) => theme.spacing.md};
+  border-top: 1px solid ${({ theme }) => theme.colors.borderLight};
   display: flex;
-  align-items: center;
-  gap: ${({ theme }) => theme.spacing.sm};
-  font-size: ${({ theme }) => theme.fontSize.xs};
-  color: ${({ theme }) => theme.colors.textLight};
-  background: ${({ theme }) => theme.colors.backgroundLight};
-  padding: ${({ theme }) => `${theme.spacing.xs} ${theme.spacing.sm}`};
-  border-radius: ${({ theme }) => theme.borderRadius.sm};
-  width: fit-content;
+  justify-content: center;
+  width: 100%;
 `;
 
-const StatusBadge = styled.div<{ status: string }>`
-  display: flex;
+const DetailLinkButton = styled.button`
+  display: inline-flex;
   align-items: center;
-  gap: ${({ theme }) => theme.spacing.xs};
-  padding: ${({ theme }) => `${theme.spacing.xs} ${theme.spacing.sm}`};
-  border-radius: ${({ theme }) => theme.borderRadius.sm};
-  font-size: ${({ theme }) => theme.fontSize.xs};
+  justify-content: center;
+  gap: ${({ theme }) => theme.spacing.sm};
+  padding: ${({ theme }) => `${theme.spacing.md} ${theme.spacing.xl}`};
+  border-radius: ${({ theme }) => theme.borderRadius.md};
+  border: 1px solid ${({ theme }) => theme.colors.borderLight};
+  background: ${({ theme }) => theme.colors.white};
+  font-size: ${({ theme }) => theme.fontSize.md};
   font-weight: ${({ theme }) => theme.fontWeight.medium};
-  
-  ${({ status, theme }) => status === 'success' 
-    ? `
-      background: #e6f7ed;
-      color: #00875a;
-    `
-    : `
-      background: #ffebe6;
-      color: #de350b;
-    `
-  }
-  
+  color: ${({ theme }) => theme.colors.text};
+  cursor: pointer;
+  width: 100%;
+  transition: all 0.15s ease;
+
   svg {
-    width: 14px;
-    height: 14px;
+    width: 18px;
+    height: 18px;
+  }
+
+  &:hover {
+    background: ${({ theme }) => theme.colors.backgroundLight};
+    transform: translateY(-1px);
+  }
+
+  &:active {
+    transform: translateY(0);
   }
 `;
+
+/* ──────────────────────────────────────────── */
+/* URL 생성 */
+/* ──────────────────────────────────────────── */
+
+const buildPatentUrl = (patentId: string) => {
+    return `https://doi.org/10.8080/${patentId}`;
+};
 
 interface PatentCardProps {
-  patent: PatentItem;
-  onClick?: () => void;
+    patent: PatentItem;
+    onClick?: () => void;
 }
 
 export const PatentCard = ({ patent, onClick }: PatentCardProps) => {
-  // relevanceScore는 "0.35" 형식의 문자열이므로 숫자로 변환 후 100을 곱해서 퍼센트로 표시
-  const relevancePercent = Math.round(parseFloat(patent.relevanceScore) * 100);
-  
-  const getSimilarityVariant = (score: number) => {
-    if (score >= 80) return 'danger';  // 높은 유사도는 위험(red)
-    if (score >= 60) return 'warning';
-    if (score >= 40) return 'info';
-    return 'success';  // 낮은 유사도는 안전(green)
-  };
+    const relevancePercent = Math.round(parseFloat(patent.relevanceScore) * 100);
 
-  // 날짜 포맷팅 (YYYYMMDD -> YYYY.MM.DD)
-  const formatDate = (date: string) => {
-    if (date.length === 8) {
-      return `${date.slice(0, 4)}.${date.slice(4, 6)}.${date.slice(6, 8)}`;
-    }
-    return date;
-  };
+    const getSimilarityVariant = (score: number) => {
+        if (score >= 80) return 'danger';
+        if (score >= 60) return 'warning';
+        if (score >= 40) return 'info';
+        return 'success';
+    };
 
-  return (
-    <StyledPatentCard hoverable onClick={onClick}>
-      <CardHeader>
-        <Title>{patent.title}</Title>
-        <SimilarityBadge variant={getSimilarityVariant(relevancePercent)}>
-          유사도: {relevancePercent}%
-        </SimilarityBadge>
-      </CardHeader>
-      
-      <InfoGrid>
-        <InfoItem>
-          <User />
-          <span>{patent.applicant}</span>
-        </InfoItem>
-        <InfoItem>
-          <Calendar />
-          <span>출원일: {formatDate(patent.applicationDate)}</span>
-        </InfoItem>
-        <InfoItem>
-          <FileText />
-          <span>출원번호: {patent.patentId}</span>
-        </InfoItem>
-        <StatusBadge status={patent.matchstatus}>
-          {patent.matchstatus === 'success' ? (
-            <>
-              <CheckCircle />
-              <span>매칭 성공</span>
-            </>
-          ) : (
-            <>
-              <XCircle />
-              <span>매칭 실패</span>
-            </>
-          )}
-        </StatusBadge>
-      </InfoGrid>
-      
-      <Summary>{patent.summary}</Summary>
-      
-      <PatentId>
-        특허 ID: {patent.patentId}
-      </PatentId>
-    </StyledPatentCard>
-  );
+    const formatDate = (date: string) => {
+        if (date.length === 8) {
+            return `${date.slice(0, 4)}-${date.slice(4, 6)}-${date.slice(6, 8)}`;
+        }
+        return date;
+    };
+
+    const formatPatentId = (id: string) => {
+        if (id.startsWith("KR-10-")) return id;
+        const numbers = id.replace(/\D/g, "");
+        if (numbers.length >= 9) {
+            return `KR-10-${numbers.slice(0, 4)}-${numbers.slice(4)}`;
+        }
+        return id;
+    };
+
+    return (
+        <StyledPatentCard hoverable={!!onClick}>
+            <TopHeader>
+                <PatentIdBadge>
+                    {formatPatentId(patent.patentId)}
+                </PatentIdBadge>
+
+                <SimilarityBadge variant={getSimilarityVariant(relevancePercent)}>
+                    {relevancePercent}% 유사
+                </SimilarityBadge>
+            </TopHeader>
+
+            <Title>{patent.title}</Title>
+
+            <InfoRow>
+                <InfoItem>
+                    <User />
+                    <span>{patent.applicant}</span>
+                </InfoItem>
+                <InfoItem>
+                    <Calendar />
+                    <span>{formatDate(patent.applicationDate)}</span>
+                </InfoItem>
+            </InfoRow>
+
+            <Summary>{patent.summary}</Summary>
+
+            <CardFooter>
+                <DetailLinkButton
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        window.open(buildPatentUrl(patent.patentId), "_blank", "noopener,noreferrer");
+                    }}
+                >
+                    자세히 보기
+                    <ExternalLink />
+                </DetailLinkButton>
+            </CardFooter>
+        </StyledPatentCard>
+    );
 };
-
