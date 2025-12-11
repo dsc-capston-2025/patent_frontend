@@ -1,6 +1,6 @@
 import { AnalyzeIdeaRequest, AnalyzeIdeaResponse } from '@/types';
 
-const API_BASE_URL = 'http://127.0.0.1:5001';
+const API_BASE_URL = 'https://unraptured-thanh-drouthier.ngrok-free.dev';
 
 /**
  * 아이디어를 분석하여 유사 특허를 검색하는 API 호출
