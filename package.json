@@ -1,6 +1,7 @@
 {
   "name": "patent-similarity-search-system",
   "version": "0.1.0",
+  "homepage": "/ideafinder",
   "private": true,
   "type": "module",
   "scripts": {
