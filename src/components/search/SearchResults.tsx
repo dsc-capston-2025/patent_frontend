@@ -145,14 +145,16 @@ interface SearchResultsProps {
   onPatentClick?: (patent: PatentItem) => void;
 }
 
-export const SearchResults = ({ 
-  results, 
-  isLoading, 
+
+
+export const SearchResults = ({
+  results,
+  isLoading,
   searchTime,
   chatResponse,
   apiStatus,
   error,
-  onPatentClick 
+  onPatentClick
 }: SearchResultsProps) => {
   if (isLoading) {
     return <Loading text="AI가 아이디어를 분석하고 유사 특허를 검색하는 중입니다..." />;
@@ -166,32 +168,43 @@ export const SearchResults = ({
     );
   }
 
+  const validResults = results.filter(
+      (p) => Math.round(parseFloat(p.relevanceScore) * 100) > 35
+  );
+
   return (
     <ResultsContainer>
       {/* AI 응답 표시 */}
       {chatResponse && (
         <>
           <ChatResponseTitle>🤖 AI 특허 전략가 분석</ChatResponseTitle>
-          <ChatResponseSection 
+          <ChatResponseSection
             dangerouslySetInnerHTML={{ __html: parseMarkdown(chatResponse) }}
           />
         </>
       )}
 
+      {results.length > 0 && validResults.length === 0 && (
+        <EmptyState>
+            <EmptyTitle>🔍 유사한 특허를 찾을 수 없었어요</EmptyTitle>
+            <EmptyText>입력한 아이디어와 의미 있는 유사도(35% 초과)를 가진 특허가 발견되지 않았습니다.</EmptyText>
+        </EmptyState>
+      )}
+
       {/* 특허 목록 표시 */}
-      {results.length > 0 ? (
+      {validResults.length > 0 ? (
         <>
           <PatentListTitle>유사 특허 목록</PatentListTitle>
           <ResultsHeader>
-            <ResultsCount>{results.length}개의 유사 특허 발견</ResultsCount>
+            <ResultsCount>{validResults.length}개의 유사 특허 발견</ResultsCount>
             {searchTime && (
               <ResultsTime>검색 시간: {searchTime.toFixed(2)}초</ResultsTime>
             )}
           </ResultsHeader>
           <ResultsList>
-            {results.map((patent) => (
-              <PatentCard 
-                key={patent.patentId} 
+            {validResults.map((patent) => (
+              <PatentCard
+                key={patent.patentId}
                 patent={patent}
                 onClick={() => onPatentClick?.(patent)}
               />
